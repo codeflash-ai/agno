@@ -47,9 +47,8 @@ class InfraResource(InfraBase):
     def get_resource_type_list(self) -> List[str]:
         if self.resource_type_list is None:
             return [self.get_resource_type().lower()]
-
-        type_list: List[str] = [resource_type.lower() for resource_type in self.resource_type_list]
-        if self.get_resource_type() not in type_list:
+        type_list = [resource_type.lower() for resource_type in self.resource_type_list]
+        if self.get_resource_type().lower() not in type_list:
             type_list.append(self.get_resource_type().lower())
         return type_list
 
@@ -148,20 +147,19 @@ class InfraResource(InfraBase):
         name_filter: Optional[str] = None,
         type_filter: Optional[str] = None,
     ) -> bool:
+        group_name = self.get_group_name() if group_filter is not None else None
+        resource_name = self.get_resource_name() if name_filter is not None else None
+        resource_type_list = self.get_resource_type_list() if type_filter is not None else None
+
         if group_filter is not None:
-            group_name = self.get_group_name()
-            logger.debug(f"{self.get_resource_name()}: Checking {group_filter} in {group_name}")
             if group_name is None or group_filter not in group_name:
                 return False
         if name_filter is not None:
-            resource_name = self.get_resource_name()
-            logger.debug(f"{self.get_resource_name()}: Checking {name_filter} in {resource_name}")
             if resource_name is None or name_filter not in resource_name:
                 return False
         if type_filter is not None:
-            resource_type_list = self.get_resource_type_list()
-            logger.debug(f"{self.get_resource_name()}: Checking {type_filter.lower()} in {resource_type_list}")
-            if resource_type_list is None or type_filter.lower() not in resource_type_list:
+            type_filter_lower = type_filter.lower()
+            if resource_type_list is None or type_filter_lower not in resource_type_list:
                 return False
         return True
 
