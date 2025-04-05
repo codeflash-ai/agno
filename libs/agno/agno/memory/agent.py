@@ -68,30 +68,27 @@ class AgentMemory(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def to_dict(self) -> Dict[str, Any]:
-        _memory_dict = self.model_dump(
-            exclude_none=True,
-            include={
-                "update_system_message_on_change",
-                "create_session_summary",
-                "update_session_summary_after_run",
-                "create_user_memories",
-                "update_user_memories_after_run",
-                "user_id",
-                "num_memories",
-            },
-        )
+        include_fields = [
+            "update_system_message_on_change",
+            "create_session_summary",
+            "update_session_summary_after_run",
+            "create_user_memories",
+            "update_user_memories_after_run",
+            "user_id",
+            "num_memories",
+        ]
+
+        _memory_dict = {field: getattr(self, field) for field in include_fields if getattr(self, field) is not None}
+
         # Add summary if it exists
         if self.summary is not None:
             _memory_dict["summary"] = self.summary.to_dict()
-        # Add memories if they exist
-        if self.memories is not None:
-            _memory_dict["memories"] = [memory.to_dict() for memory in self.memories]
-        # Add messages if they exist
-        if self.messages is not None:
-            _memory_dict["messages"] = [message.to_dict() for message in self.messages]
-        # Add runs if they exist
-        if self.runs is not None:
-            _memory_dict["runs"] = [run.to_dict() for run in self.runs]
+
+        # Use helper function to add list fields if exist
+        self._add_list_to_dict(_memory_dict, "memories")
+        self._add_list_to_dict(_memory_dict, "messages")
+        self._add_list_to_dict(_memory_dict, "runs")
+
         return _memory_dict
 
     def add_run(self, agent_run: AgentRun) -> None:
@@ -372,23 +369,19 @@ class AgentMemory(BaseModel):
         self.memories = None
 
     def deep_copy(self) -> "AgentMemory":
-        from copy import deepcopy
-
-        # Create a shallow copy of the object
         copied_obj = self.__class__(**self.to_dict())
 
-        # Manually deepcopy fields that are known to be safe
-        for field_name, field_value in self.__dict__.items():
-            if field_name not in ["db", "classifier", "manager", "summarizer"]:
-                try:
-                    setattr(copied_obj, field_name, deepcopy(field_value))
-                except Exception as e:
-                    logger.warning(f"Failed to deepcopy field: {field_name} - {e}")
-                    setattr(copied_obj, field_name, field_value)
-
-        copied_obj.db = self.db
-        copied_obj.classifier = self.classifier
-        copied_obj.manager = self.manager
-        copied_obj.summarizer = self.summarizer
+        # Attributes that do not need deep copying, directly assign
+        shallow_copy_attrs = ["db", "classifier", "manager", "summarizer"]
+        for field_name in shallow_copy_attrs:
+            try:
+                setattr(copied_obj, field_name, getattr(self, field_name))
+            except Exception as e:
+                logger.warning(f"Failed to set attribute: {field_name} - {e}")
 
         return copied_obj
+
+    def _add_list_to_dict(self, _memory_dict: Dict[str, Any], attr_name: str) -> None:
+        attr = getattr(self, attr_name)
+        if attr is not None:
+            _memory_dict[attr_name] = [item.to_dict() for item in attr]
