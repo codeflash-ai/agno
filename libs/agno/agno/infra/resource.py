@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from agno.infra.base import InfraBase
-from agno.utils.log import logger
+from agno.utils.log import debug_on, logger
 
 
 class InfraResource(InfraBase):
@@ -148,21 +148,29 @@ class InfraResource(InfraBase):
         name_filter: Optional[str] = None,
         type_filter: Optional[str] = None,
     ) -> bool:
+        resource_name = self.get_resource_name()
+        group_name = self.get_group_name()
+
         if group_filter is not None:
-            group_name = self.get_group_name()
-            logger.debug(f"{self.get_resource_name()}: Checking {group_filter} in {group_name}")
+            if debug_on:
+                logger.debug(f"{resource_name}: Checking {group_filter} in {group_name}")
             if group_name is None or group_filter not in group_name:
                 return False
+
         if name_filter is not None:
-            resource_name = self.get_resource_name()
-            logger.debug(f"{self.get_resource_name()}: Checking {name_filter} in {resource_name}")
+            if debug_on:
+                logger.debug(f"{resource_name}: Checking {name_filter} in {resource_name}")
             if resource_name is None or name_filter not in resource_name:
                 return False
+
         if type_filter is not None:
             resource_type_list = self.get_resource_type_list()
-            logger.debug(f"{self.get_resource_name()}: Checking {type_filter.lower()} in {resource_type_list}")
-            if resource_type_list is None or type_filter.lower() not in resource_type_list:
+            type_filter_lower = type_filter.lower()
+            if debug_on:
+                logger.debug(f"{resource_name}: Checking {type_filter_lower} in {resource_type_list}")
+            if resource_type_list is None or type_filter_lower not in resource_type_list:
                 return False
+
         return True
 
     def should_create(
