@@ -149,20 +149,23 @@ class InfraResource(InfraBase):
         type_filter: Optional[str] = None,
     ) -> bool:
         if group_filter is not None:
-            group_name = self.get_group_name()
-            logger.debug(f"{self.get_resource_name()}: Checking {group_filter} in {group_name}")
+            group_name = self.group or self.name
             if group_name is None or group_filter not in group_name:
                 return False
+
+        resource_name = self.name
+        if resource_name is None:
+            resource_name = self.__class__.__name__
+
         if name_filter is not None:
-            resource_name = self.get_resource_name()
-            logger.debug(f"{self.get_resource_name()}: Checking {name_filter} in {resource_name}")
             if resource_name is None or name_filter not in resource_name:
                 return False
+
         if type_filter is not None:
-            resource_type_list = self.get_resource_type_list()
-            logger.debug(f"{self.get_resource_name()}: Checking {type_filter.lower()} in {resource_type_list}")
+            resource_type_list = self.get_resource_type_list_cached()
             if resource_type_list is None or type_filter.lower() not in resource_type_list:
                 return False
+
         return True
 
     def should_create(
@@ -203,3 +206,13 @@ class InfraResource(InfraBase):
             if other.get_resource_type() == self.get_resource_type():
                 return self.get_resource_name() == other.get_resource_name()
         return False
+
+    def get_resource_type_list_cached(self) -> list:
+        if not hasattr(self, "_resource_type_list_cached"):
+            if self.resource_type_list is None:
+                self._resource_type_list_cached = [self.get_resource_type().lower()]
+            else:
+                self._resource_type_list_cached = [resource_type.lower() for resource_type in self.resource_type_list]
+                if self.get_resource_type().lower() not in self._resource_type_list_cached:
+                    self._resource_type_list_cached.append(self.get_resource_type().lower())
+        return self._resource_type_list_cached
