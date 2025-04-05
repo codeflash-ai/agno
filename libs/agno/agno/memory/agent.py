@@ -128,8 +128,8 @@ class AgentMemory(BaseModel):
         log_debug(f"Added {len(messages)} Messages to AgentMemory")
 
     def get_messages(self) -> List[Dict[str, Any]]:
-        """Returns the messages list as a list of dictionaries."""
-        return [message.model_dump() for message in self.messages]
+        """Returns the precomputed message dictionaries."""
+        return self._message_dictionaries
 
     def get_messages_from_last_n_runs(
         self, last_n: Optional[int] = None, skip_role: Optional[str] = None
@@ -392,3 +392,13 @@ class AgentMemory(BaseModel):
         copied_obj.summarizer = self.summarizer
 
         return copied_obj
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Precompute message dictionaries during initialization
+        self._message_dictionaries: List[Dict[str, Any]] = [message.model_dump() for message in self.messages]
+
+    def add_message(self, message: Any) -> None:
+        """Adds a message and updates the precomputed message dictionaries."""
+        self.messages.append(message)
+        self._message_dictionaries.append(message.model_dump())
