@@ -129,10 +129,8 @@ class InfraBase(BaseModel):
         raise NotImplementedError("get_infra_resources method not implemented")
 
     def set_aws_env_vars(self, env_dict: Dict[str, str], aws_region: Optional[str] = None) -> None:
-        from agno.constants import (
-            AWS_DEFAULT_REGION_ENV_VAR,
-            AWS_REGION_ENV_VAR,
-        )
+        from agno.constants import (AWS_DEFAULT_REGION_ENV_VAR,
+                                    AWS_REGION_ENV_VAR)
 
         if aws_region is not None:
             # logger.debug(f"Setting AWS Region to {aws_region}")
