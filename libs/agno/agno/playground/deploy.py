@@ -27,32 +27,23 @@ def create_deployment_info(
         Text: A Rich Text object containing formatted deployment information
     """
     # Base info always shown
-    elements = [
-        ("📦 App: ", "bold"),
-        (f"{app}\n", "cyan"),
-        ("📂 Root: ", "bold"),
-        (f"{root}\n", "cyan"),
-        ("⏱️  Time: ", "bold"),
-        (f"{elapsed_time}\n", "yellow"),
-    ]
+    text = Text()
+    text.append("📦 App: ", style="bold")
+    text.append(f"{app}\n", style="cyan")
+    text.append("📂 Root: ", style="bold")
+    text.append(f"{root}\n", style="cyan")
+    text.append("⏱️  Time: ", style="bold")
+    text.append(f"{elapsed_time}\n", style="yellow")
 
     # Add either status or error, not both
     if error is not None:
-        elements.extend(
-            [
-                ("🚨 Error: ", "bold"),
-                (f"{error}", "red"),
-            ]
-        )
+        text.append("🚨 Error: ", style="bold")
+        text.append(f"{error}", style="red")
     elif status is not None:
-        elements.extend(
-            [
-                ("🚧 Status: ", "bold"),
-                (f"{status}", "yellow"),
-            ]
-        )
+        text.append("🚧 Status: ", style="bold")
+        text.append(f"{status}", style="yellow")
 
-    return Text.assemble(*elements)
+    return text
 
 
 def create_info_panel(deployment_info: Text) -> Panel:
