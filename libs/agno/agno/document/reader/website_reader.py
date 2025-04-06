@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Set, Tuple
@@ -57,9 +58,14 @@ class WebsiteReader(Reader):
         :param url: The URL to extract the primary domain from.
         :return: The primary domain.
         """
-        domain_parts = urlparse(url).netloc.split(".")
-        # Return primary domain (excluding subdomains)
-        return ".".join(domain_parts[-2:])
+        # Regular expression to match the domain parts
+        match = re.search(r"(?<=://)([^/?#]+)", url)
+        if match:
+            netloc = match.group(0)
+            domain_parts = netloc.split(".")
+            # Return primary domain (excluding subdomains)
+            return ".".join(domain_parts[-2:])
+        return ""
 
     def _extract_main_content(self, soup: BeautifulSoup) -> str:
         """
