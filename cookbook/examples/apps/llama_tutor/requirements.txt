@@ -116,7 +116,7 @@ pillow==11.1.0
     # via streamlit
 primp==0.14.0
     # via duckduckgo-search
-protobuf==5.29.3
+protobuf==7.34.0rc1
     # via
     #   google-ai-generativelanguage
     #   google-api-core
